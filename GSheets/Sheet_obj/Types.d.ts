@@ -2,9 +2,10 @@ export {}
 
 
 declare global{
-    namespace GSheets{
+    
+    namespace Sheet_obj{
         
-        namespace Sheet_obj{
+        namespace Index{
             
             type cel_obj = {
                 valor: any,
@@ -24,7 +25,7 @@ declare global{
                 pos: number,
                 valor: any[],
                 set_valor: (params:{valor: any, cor_fundo: string}) => void,
-                get_cel: (params: {col_nome}) => cel_obj
+                get_cel: (params: {col_nome: string}) => cel_obj
             }
 
             type sheet_obj = {
@@ -32,14 +33,39 @@ declare global{
                 linhas: linha_obj[],
                 cols: col_obj[],
             }
-            
 
             // GET // GET // GET // GET
             type get_sheet_obj = ( params: {
                 sheet: GoogleAppsScript.Spreadsheet.Sheet,
-                get_a1_notation: GSheets.Util.get_a1_notation, 
-                set_range_value: GSheets.Util.set_range_value,
+                get_a1_notation: Sheet_obj.Util.get_a1_notation, 
+                set_range_value: Sheet_obj.Util.set_range_value,
             }) => sheet_obj
+        }
+
+        
+        namespace Util{
+            //  
+            type get_a1_notation = (params: {
+                col_posicao: number,
+                linha_pos: number
+            }) => string
+    
+            //  
+            type link_to_id = (params: {
+                link: string,
+            }) => string
+    
+            //
+            type set_range_value = (params: {
+                sheet: GoogleAppsScript.Spreadsheet.Sheet, 
+                l_pos: number, 
+                l_quant?: number, 
+                col_pos?: number, 
+                col_quant?: number,
+                valor: any,
+                cor_fundo: string,   
+            }) => void
         }
     }
 }
+

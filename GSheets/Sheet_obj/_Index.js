@@ -1,7 +1,7 @@
 // @ts-check
 
 /**
- * @type {GSheets.Sheet_obj.get_sheet_obj}
+ * @type {Sheet_obj.Index.get_sheet_obj}
  */
 function get_sheet_obj({
   sheet,
@@ -23,7 +23,7 @@ function get_sheet_obj({
 
     // CABECALHO  
     /**
-     * @type {GSheets.Sheet_obj.col_obj[]} 
+     * @type {Sheet_obj.Index.col_obj[]} 
     */
     const cols = cabecalho
     .map((nome, index) => {
@@ -45,7 +45,7 @@ function get_sheet_obj({
 
     // LINHAS
     /**
-     * @type {GSheets.Sheet_obj.linha_obj[]}
+     * @type {Sheet_obj.Index.linha_obj[]}
      */
     const linhas = linhas_valores.map((linha_valores, index) => {
       

@@ -16,13 +16,13 @@
   // array bidimensional, que sera usado para gerar a tabela 
   // de resultado na seguinte forma:
 
-      const cols = ['Nome', 'Idade']
-      const res_valores = [
-        ['Ana',  25],
-        ['Beto', 30]
-      ];
+      // const cols = ['Nome', 'Idade']
+      // const res_valores = [
+      //   ['Ana',  25],
+      //   ['Beto', 30]
+      // ];
 
-      const sheet_resultado = ss.insertSheet(`_p_res_${agora()}`);
-      sheet_resultado.getRange(1, 1, res_valores.length, cols.length).setValues(res_valores);
+      // const sheet_resultado = ss.insertSheet(`_p_res_${agora()}`);
+      // sheet_resultado.getRange(1, 1, res_valores.length, cols.length).setValues(res_valores);
 
   // ou despejar cada linha ? 

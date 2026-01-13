@@ -1,8 +1,5 @@
-// @ts-check
-
-
 /**
- *  @type {GSheets.Util.link_to_id}
+ *  @type {Sheet_obj.Util.link_to_id}
  */
 function link_to_id({link}) {
   const arq_padrao = /\/d\/(.*?)\//
@@ -33,7 +30,7 @@ function get_data_hora(){
 
 
 /**
- * @type {GSheets.Util.get_a1_notation} 
+ * @type {Sheet_obj.Util.get_a1_notation} 
  */
 function get_a1_notation({col_posicao, linha_pos}){
 
@@ -57,7 +54,7 @@ function get_a1_notation({col_posicao, linha_pos}){
     
     // -1 para compensar o base 0 do array[index]
     const l_index = (col_posicao % abc_len) -1
-    const letra = ABC.at(l_index)
+    const letra = ABC[l_index]
 
     col_letras.push(letra)
   }
@@ -71,7 +68,7 @@ function get_a1_notation({col_posicao, linha_pos}){
 
 
 /**
- * @type {GSheets.Util.set_range_value} 
+ * @type {Sheet_obj.Util.set_range_value} 
  */
 function set_range_value({
   sheet, 
