@@ -5,18 +5,13 @@ declare global{
 
     namespace Extratos{
 
-        namespace CC {
+        namespace At_corresps {
             
-            type cc_fn = (params: {
-
+            type AT_CORRESPS = (params: {
+                sheet_alvo: GoogleAppsScript.Spreadsheet.Sheet,
+                sheet_corresp: GoogleAppsScript.Spreadsheet.Sheet
             }) => void
-
-            type CC = (params: {
-                sheet_alvo_col_alvo: string, 
-                sheet_alvo_cols_nomes: string[], 
-                corresp_col: string
-            }) => cc_fn
-
+            
         }
 
     }

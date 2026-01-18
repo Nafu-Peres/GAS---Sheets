@@ -16,10 +16,13 @@ declare global{
 
         namespace Sheet_obj{
             //
-            type cell_obj = {
-                col_nome: string,
+            type cel_obj = {
                 range: GoogleAppsScript.Spreadsheet.Range,
                 valor: any
+            }
+            //
+            type cels_obj = {
+                [key: string] : cel_obj
             }
             //
             type col_obj = {
@@ -32,40 +35,22 @@ declare global{
             type linha_obj = {
                 range: GoogleAppsScript.Spreadsheet.Range,
                 valores: any[],
-                get_cell: (coluna_nome: string) => cell_obj
+                get_cel: (coluna_nome: string) => cel_obj
             }
             //
-            type filtro_fn = (params: {
-                linha: linha_obj,
-                linhas?: linha_obj[],
-                sheet?: GoogleAppsScript.Spreadsheet.Sheet,
-            }) => boolean
-            //
-            type a_cada_l_cb_fn = (params: {
-                linha: linha_obj,
-                linhas?: linha_obj[],
-                sheet?: GoogleAppsScript.Spreadsheet.Sheet,
-            }) => void
-            //
-            type a_cada_l_fn = (params: {
-                call_back: a_cada_l_cb_fn,
-                filtros: filtro_fn[],
-            }) => void
-            //
-            type append_linha_fn = (params: {
-                cols_val: object 
-            }) => void
+            type append_linha = (params: {
+                cels_obj?: cels_obj 
+            }) => linha_obj
             //
             type sheet_obj = {
                 sheet: GoogleAppsScript.Spreadsheet.Sheet,
                 linhas: linha_obj[],
                 cols: col_obj[],
-                a_cada_linha: a_cada_l_fn,
-                append_linha,
+                append_linha: append_linha
             }
             //
-            type Sheet_obj_fn = (params: {
-                sheet: GoogleAppsScript.Spreadsheet.Sheet | null,
+            type Sheet_obj = (params:{
+                sheet: GoogleAppsScript.Spreadsheet.Sheet,
                 cols_obrigatorias?: string [],
             }) => sheet_obj
         }
