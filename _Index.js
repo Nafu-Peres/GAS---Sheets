@@ -1,15 +1,13 @@
-function hello(){
 
 
+
+function onOpen(){
+
+    const ui = SpreadsheetApp.getUi()
+    let menu = ui.createMenu('🕷 Processar Extratos')
+
+    menu = addSubMenu_COMPARAR_CORRESPS({ui, menu})
+
+    menu.addToUi()
 }
 
-
-
-
-
-// const row_hidden = sheet.isRowHiddenByFilter(4)
-
-
-// const filter  = SpreadsheetApp.getActiveSheet().getFilter();
-// const criterioColB = filter.getColumnFilterCriteria(2); // coluna B
-// const valoresOcultos = criterioColB.getHiddenValues();  // → array com o que foi desmarcado

@@ -5,52 +5,91 @@
  */
 function Sheet_obj({
   sheet, 
-  cols_obrigatorias = [], 
+  colunas: cols_esperadas = [], 
 }){
   
-  // COLUNAS
-  const cols_nomes = sheet
-  .getRange(1, 1, 1, sheet.getLastColumn())
-  .getValues()[0] // [][] => []
-  .filter((_,index) => !sheet.isColumnHiddenByUser(index + 1))
-  .map((col_nome, index) => {
-    
-    col_nome = col_nome
-    .toString()
-    .trim()
+  
+  const [tabela_cols_valores] = sheet
+  .getRange(1, 1, 1, cols_esperadas.length)
+  .getValues()
+  
+  const cols_extras = tabela_cols_valores.filter(s_col => (
+    !cols_esperadas.includes(s_col)
+  ))
 
-    if(!col_nome) throw new Error(`
-      Nome da coluna não pode ser vazia/ nulo
-      posicao da coluna vazia: ${index + 1}  
-    `)
+  const cols_faltantes = cols_esperadas.filter(col_esp => (
+    !tabela_cols_valores.includes(col_esp)
+  ))
 
-    return col_nome
-  })
+  if(cols_extras.length || cols_faltantes.length){
 
-  const cols_faltantes = cols_obrigatorias
-  .map(col_obg => !cols_nomes.includes(col_obg))
-      
-  if(cols_faltantes.length){
     throw new Error(`
-      Uma ou mais coluna obrigatória não esta presente na planilha ${sheet.getName()}
-      cols_faltantes: ${cols_faltantes};
-      cols_obrigatorias: ${cols_obrigatorias}
-    `)
+      Colunas da tabela "${sheet.getName()}" não correspondem ao esperado
+
+        - colunas faltantes = ${cols_faltantes.length ? cols_faltantes : '-'} 
+
+        - colunas extras = ${cols_extras.length ? cols_extras : '-'}
+
+        - colunas esperadas = ${cols_esperadas}
+      
+        *lembre de sempre colocar a primeira celula da tabela (canto superior direito) na celula "A1"
+      `
+    )
+
   }
 
-  const cols = cols_nomes
-  .map((nome, index) => {
+
+  const cols = cols_esperadas
+  .map( col_nome => {
   
-    const col_pos = index + 1
-    
+    const col_pos = tabela_cols_valores.indexOf(col_nome) +1
+
     return {
-      nome,
+      nome: col_nome,
       col_pos,
       range: sheet.getRange(1, col_pos),
       linhas_range: sheet.getRange(2, col_pos, sheet.getLastRow(), 1)
     }
   })
 
+  /**
+   * @param {{row_n: number}} param0 
+   * @returns {Gsheet.Sheet_obj.linha_obj}
+  */
+  function Linha_obj({row_n}){
+
+    const linha_range = sheet.getRange(row_n, 1, 1, sheet.getLastColumn())
+    const [linha_valores_arr] = linha_range.getValues()
+        
+    return {
+      range: linha_range,
+      valores: linha_valores_arr,
+      get_cel: (col_nome) => Cel_obj(col_nome, row_n)
+    }
+  }
+
+  /// CELULAS
+  /**
+  * @type {(col_nome: string, row_n: number) => Gsheet.Sheet_obj.cel_obj}
+  */
+  function Cel_obj(col_nome, row_n){
+
+    const col = cols.find(c => c.nome === col_nome)
+    
+    if(!col) throw new Error(`
+      Não foi possivel resgatar o objeto cell com o nome da coluna: 
+        Nome da coluna não é valido 
+        - nome passado: ${col_nome}
+        - colunas do sheet: ${cols_esperadas}
+    `)
+    
+    const cel_range = sheet.getRange(row_n, col.col_pos)
+    
+    return {
+      range: cel_range,
+      valor: cel_range.getValue()
+    }
+  }
 
   // LINHAS
   const linhas = []
@@ -60,31 +99,18 @@ function Sheet_obj({
     if(sheet.isRowHiddenByFilter(row_n) || sheet.isRowHiddenByUser(row_n))
       continue
 
-    linhas.push(get_linha({row_n}))
+    const linha = Linha_obj({row_n})
+    linhas.push(linha)
   }
 
-  /**
-   * @param {{row_n: number}} param0 
-   * @returns {Gsheet.Sheet_obj.linha_obj}
-  */
-  function get_linha({row_n}){
 
-    const linha_range = sheet.getRange(row_n, 1, 1, sheet.getLastColumn())
-    const [linha_valores_arr] = linha_range.getValues()
-        
-    return {
-      range: linha_range,
-      valores: linha_valores_arr,
-      get_cel: (col_nome) => get_celula(col_nome, row_n)
-    }
-  }
 
   /**
    * @type {Gsheet.Sheet_obj.append_linha} 
   */
   function append_linha({cels_obj= {}}){
 
-    const linha_nova = get_linha({
+    const linha_nova = Linha_obj({
       row_n: sheet.getLastRow() + 1
     })
 
@@ -100,31 +126,6 @@ function Sheet_obj({
 
     return linha_nova
   }
-
-
-  /// CELULAS
-  /**
-  * @type {(col_nome: string, row_n: number) => Gsheet.Sheet_obj.cel_obj}
-  */
-  function get_celula(col_nome, row_n){
-
-    const col = cols.find(c => c.nome === col_nome)
-    
-    if(!col) throw new Error(`
-      Não foi possivel resgatar o objeto cell com o nome da coluna: 
-        Nome da coluna não é valido 
-        - nome passado: ${col_nome}
-        - colunas do sheet: ${cols_nomes}
-    `)
-    
-    const cel_range = sheet.getRange(row_n, col.col_pos)
-    
-    return {
-      range: cel_range,
-      valor: cel_range.getValue()
-    }
-  }
-
 
   // SHEET
   return {

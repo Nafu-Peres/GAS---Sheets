@@ -51,7 +51,7 @@ declare global{
             //
             type Sheet_obj = (params:{
                 sheet: GoogleAppsScript.Spreadsheet.Sheet,
-                cols_obrigatorias?: string [],
+                colunas: string [],
             }) => sheet_obj
         }
     }

@@ -23,9 +23,44 @@ function link_to_id({link}) {
 
 
 
+/** @type {() => string} */
 function get_data_hora(){
   return new Date().toLocaleString('sv', { hour12: false })
 }
 
 
 
+
+
+/** @type {(str: string) => boolean} */
+function isUUID(str) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(str);
+}
+
+
+
+
+/** @type {(texto_monetario: string | number) => number} */
+function money_to_n(texto_monetario){
+  
+  if(!texto_monetario ) 
+    return 0
+  
+  if(typeof texto_monetario === 'number') 
+    return texto_monetario
+
+  texto_monetario = texto_monetario
+    .replace(/[^\d,-]/g, '')
+      .replace(',','.')
+
+  try{
+    return  Number(texto_monetario)
+  
+  }catch(e){
+
+    throw new Error(`
+      Não foi possivel converter texto de valor monetario em numero
+      texto moentario = ${texto_monetario}
+    `)
+  }
+}

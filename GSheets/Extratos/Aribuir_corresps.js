@@ -2,174 +2,198 @@
 
 
 /** @type {Extratos.At_corresps.AT_CORRESPS} */
-function AT_CORRESPS({
-  sheet_alvo,
-  sheet_corresp, 
-  modificar_sheet_og,
-}){
+function COMPARAR_CORRESPS({sheet_alvo, sheet_corresp}){
 
-  const cols_compartilhadas = [
-    'GRUPO',	'DESCRICAO',	'EVENTO', 'CONTRAPARTE', 'BANCO_CONTRAPARTE'
+  const s_saida_cols = [
+    'DATA', 'GRUPO', 'DESCRICAO', 'DESCRICAO_EXTRATO', 'EVENTO', 'TITULAR', 'BANCO_TITULAR', 'CC', 'VALOR', 'CONTRAPARTE', 'BANCO_CONTRAPARTE', '_CORRESP_ANALISE_DATA_', '_CORRESP_LINHA_', 'ID'
   ]
 
   const s_alvo_cols = [
-    'DATA',	'DESCRICAO_EXTRATO', 'TITULAR',	'BANCO_TITULAR',	'VALOR', '_CORRESP_OBS_', '_CORRESP_DATA_', ...cols_compartilhadas		
+    'DATA',	'DESCRICAO_EXTRATO', 'TITULAR',	'BANCO_TITULAR', 'CC',	'VALOR', '_CORRESP_LINHA_', '_CORRESP_DATA_'		
   ]
 
   const s_corresp_cols = [
-    '_DESC_EXT_CORRESP_', '_DATA_INI_', '_DATA_FIM_', '_VALOR_MIN_', '_VALOR_MAX_', '_TITULAR_', '_BANCO_TITULAR_', ...cols_compartilhadas
+    '_DESC_EXT_CORRESP_', '_DATA_INI_', '_DATA_FIM_', '_VALOR_MIN_', '_VALOR_MAX_', '_TITULAR_', '_BANCO_TITULAR_',
+    'GRUPO', 'DESCRICAO', 'EVENTO', 'CONTRAPARTE', 'BANCO_CONTRAPARTE',	'ID'
   ]
-
-
+  
   /** @type {Gsheet.Sheet_obj.sheet_obj} */
   const s_alvo = Sheet_obj({
     sheet: sheet_alvo,
-    cols_obrigatorias: s_alvo_cols,
+    colunas: s_alvo_cols,
   })
 
   /** @type {Gsheet.Sheet_obj.sheet_obj} */
   const s_corresp = Sheet_obj({
     sheet: sheet_corresp,
-    cols_obrigatorias: s_corresp_cols
+    colunas: s_corresp_cols
   })
 
   const sheet_saida = SpreadsheetApp
   .getActiveSpreadsheet()
-  .insertSheet(`${get_data_hora()}-COMPARAR_P`)
+  .insertSheet(`COMPARAR_P - ${get_data_hora()}`)
 
   sheet_saida
   .getRange(1, 1, 1, s_alvo_cols.length)
-  .setValues([s_alvo_cols])
+  .setValues([s_saida_cols])
 
   /** @type {Gsheet.Sheet_obj.sheet_obj} */
   const s_saida = Sheet_obj({
     sheet: sheet_saida,
-    cols_obrigatorias: s_alvo_cols
+    colunas: s_alvo_cols
   })  
 
   //
   for (const linha_alvo of s_alvo.linhas){
 
-    /** @type {Gsheet.Sheet_obj.linha_obj} */
-    const linha_saida = s_saida.append_linha({})
-    
-
     /** @type {Gsheet.Sheet_obj.linha_obj | undefined} */
-    const _linha_corresp = get__linha_correspondente({linha: linha_alvo})
+    const _linha_corresp = get__linha_correspondente({linha: linha_alvo, s_corresp})
     
-    /// ALIMENTAR SAIDA
-    // valores de cada celula(cel) da linha saida
-    const l_saida_valores = s_saida.cols.map((ss_col) => {
+    // CAPTURAR VALORES PARA LINHA SAIDA
+    /** @type {Gsheet.Sheet_obj.cels_obj} */
+    const l_saida_cels = s_saida.cols.reduce((s_cels, s_col) => {
       
-      let cel_v_saida = ''
+      let cel
 
       if(_linha_corresp)
-        try {cel_v_saida = _linha_corresp.get_cel(ss_col.nome).valor} catch{}
+        try {cel = _linha_corresp.get_cel(s_col.nome)} catch{}
       
-      if (cel_v_saida) return cel_v_saida
-        cel_v_saida = linha_alvo.get_cel(ss_col.nome).valor // nap precisa de try catch; colunas de s_alvo === s_saida
+      if (!cel) 
+        cel = linha_alvo.get_cel(s_col.nome)// nap precisa de try catch; colunas de s_alvo === s_saida
 
-      return cel_v_saida
-    })
-
-    linha_saida.range.setValues([l_saida_valores])  
-
-    const corersp_obs = _linha_corresp 
-    ? `CORRESP L n°= ${_linha_corresp?.range.getRow()}`
-    : '!CORRESP'
-    
-    linha_alvo.get_cel('_CORRESP_OBS_').range.setValue(corersp_obs)
-    linha_alvo.get_cel('_CORRESP_DATA_').range.setValue(get_data_hora())
-
-    linha_saida.get_cel('_CORRESP_OBS_').range.setValue(corersp_obs)
-    linha_saida.get_cel('_CORRESP_DATA_').range.setValue(get_data_hora())
-
-  }  
-
-  
-
-  // checar correspndencia entre linhas:
-
-  /** 
-   * @param {{linha: Gsheet.Sheet_obj.linha_obj}} param
-  */
-  function get__linha_correspondente ({linha}){
-
-    const desc_extrato = linha
-    .get_cel('DESC_EXTRATO').valor
-
-    const data = linha
-    .get_cel('DATA').valor
-
-    const valor = linha
-    .get_cel('VALOR').valor
-
-    const banco_titu = linha
-    .get_cel('BANCO_TITU').valor
-
-    //  
-    for (const _linha of s_corresp.linhas){
-    
-      const todas_cel_condicao_vazias = s_corresp.cols
-      .filter(col => col.nome[0] === '_')
-      .every(col => !_linha.get_cel(col.nome).valor) 
-  
-      if(todas_cel_condicao_vazias){
-        console.warn (`
-          A planilha de correspondentes com celulas 
-          de condições todas vazias:
-          posicao da linha: ${_linha.range.getRow()}
-          valores da linha: ${_linha.valores}
-        `)
-        
-        _linha.range.setBackground('#ff8888')
-        continue
+      s_cels[s_col.nome] = {
+        valor: cel.valor,
+        range: cel.range
       }
-  
-      const _descricao = _linha
-      .get_cel( '_DESCRICAO_').valor
-  
-      const _data_ini = _linha
-      .get_cel('_DATA_INI_').valor
-  
-      const _data_fim = _linha
-      .get_cel('_DATA_FIM_').valor 
-  
-      const _valor_min = _linha
-      .get_cel('_VALOR_MIN_').valor
-  
-      const _valor_max = _linha
-      .get_cel('_VALOR_MAX_').valor
-  
-      const _banco_titu = _linha
-      .get_cel('_BANCO_TITU_').valor
-  
-  
-      const condicoes = [
-        () => _data_ini ? data >= _data_ini : true,
-        () => _data_fim ? data <= _data_fim : true,
-        () => _valor_min ? valor >= _valor_min : true,
-        () =>_valor_max ? valor <= _valor_max : true,
-        () => _banco_titu ? _banco_titu === banco_titu : true,  
-        () => _descricao ? descricoes_correspondem({
-          desc_corresp: _descricao,  
-          descricao: desc_extrato
-        }) : true, 
-      ]
-  
-      if (condicoes.every(cond => cond())) return _linha 
+
+      return s_cels
+    }, {})
+    
+
+    /** @type {Gsheet.Sheet_obj.linha_obj} */
+    const linha_saida = s_saida.append_linha({cels_obj: l_saida_cels})
+
+    try {
+      const alvo_ID_cel = linha_alvo.get_cel('ID')
+
+      let alvo_ID = alvo_ID_cel.valor
+
+      if(!isUUID(alvo_ID)){
+        alvo_ID = Utilities.getUuid()
+        alvo_ID_cel.range.setValue(alvo_ID)
+      }
+
+      linha_saida
+        .get_cel('ID').range.
+          setValue(alvo_ID)  
+
+    }catch{}
+    
+
+    linha_saida
+      .get_cel('_CORRESP_ANALISE_DATA_')
+        .range
+          .setValue(get_data_hora())
+    
+    if(_linha_corresp){
+      linha_saida
+        .get_cel('_CORRESP_LINHA_')
+          .range
+            .setValue(linha_saida.range.getRow())
     }
   }
+
+  s_saida.sheet.activate()
 }
 
 
 
 
-/// checar DESCRICAO com DESCRICAO_CORRESPONDENTE
-//
+// checar correspndencia entre linhas:
+/** 
+ * @param {{
+  * linha: Gsheet.Sheet_obj.linha_obj
+  * s_corresp: Gsheet.Sheet_obj.sheet_obj
+  * }} param
+*/
+function get__linha_correspondente ({linha, s_corresp}){
+
+  const desc_extrato = linha
+    .get_cel('DESC_EXTRATO').valor
+
+  const data = linha
+    .get_cel('DATA').valor
+
+  const valor = money_to_n(
+    linha
+    .get_cel('VALOR').valor
+  )
+  
+  const titular = linha
+    .get_cel('TITULAR').valor
+  
+  const banco_titu = linha
+    .get_cel('BANCO_TITU').valor
+
+  //  
+  for (const _linha of s_corresp.linhas){
+  
+    const todas_cel_condicao_vazias = s_corresp.cols
+      .filter(col => col.nome[0] === '_')
+        .every(col => !_linha.get_cel(col.nome).valor) 
+
+    if(todas_cel_condicao_vazias) continue
+
+    const _descricao = _linha
+      .get_cel( '_DESCRICAO_').valor
+
+    const _data_ini = _linha
+      .get_cel('_DATA_INI_').valor
+
+    const _data_fim = _linha
+      .get_cel('_DATA_FIM_').valor 
+
+    const _valor_min = money_to_n(
+      _linha
+      .get_cel('_VALOR_MIN_').valor
+    )
+
+    const _valor_max = money_to_n( 
+      _linha
+      .get_cel('_VALOR_MAX_').valor
+    )
+
+    const _titular = linha
+      .get_cel('_TITULAR_').valor
+
+    const _banco_titu = _linha
+      .get_cel('_BANCO_TITU_').valor
 
 
-  /** @param {{desc_corresp: string, descricao: string}} params */
+    const condicoes = [
+      () => _data_ini ? data >= _data_ini : true,
+      () => _data_fim ? data <= _data_fim : true,
+      () => _valor_min ? valor >= _valor_min : true,
+      () =>_valor_max ? valor <= _valor_max : true,
+      () => _banco_titu ? _banco_titu === banco_titu : true,
+      () => _titular ?  titular === _titular : true,
+      () => _descricao ? descricoes_correspondem({
+        desc_corresp: _descricao,  
+        descricao: desc_extrato
+      }) : true, 
+    ]
+
+    if (condicoes.every(cond => cond())) return _linha 
+  }
+}
+
+
+/** 
+ * @param {{
+ * desc_corresp: string, 
+ * descricao: string
+ * }} params 
+*/
 function descricoes_correspondem({desc_corresp, descricao}){
   
   /**@type {RegExpStringIterator} */
@@ -204,5 +228,6 @@ function descricoes_correspondem({desc_corresp, descricao}){
   })
   
   return desc_correspondem
-}
 
+
+}
