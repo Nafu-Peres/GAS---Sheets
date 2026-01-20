@@ -18,13 +18,13 @@ function COMPARAR_CORRESPS({sheet_alvo, sheet_corresp}){
   ]
   
   /** @type {Gsheet.Sheet_obj.sheet_obj} */
-  const s_alvo = Sheet_obj({
+  const s_alvo = Tabela({
     sheet: sheet_alvo,
     colunas: s_alvo_cols,
   })
 
   /** @type {Gsheet.Sheet_obj.sheet_obj} */
-  const s_corresp = Sheet_obj({
+  const s_corresp = Tabela({
     sheet: sheet_corresp,
     colunas: s_corresp_cols
   })
@@ -38,7 +38,7 @@ function COMPARAR_CORRESPS({sheet_alvo, sheet_corresp}){
   .setValues([s_saida_cols])
 
   /** @type {Gsheet.Sheet_obj.sheet_obj} */
-  const s_saida = Sheet_obj({
+  const s_saida = Tabela({
     sheet: sheet_saida,
     colunas: s_alvo_cols
   })  
